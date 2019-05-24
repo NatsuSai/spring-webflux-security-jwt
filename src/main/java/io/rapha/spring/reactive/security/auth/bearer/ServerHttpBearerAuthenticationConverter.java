@@ -23,6 +23,7 @@ import io.rapha.spring.reactive.security.auth.jwt.AuthorizationHeaderPayload;
 import io.rapha.spring.reactive.security.auth.jwt.UsernamePasswordAuthenticationBearer;
 import io.rapha.spring.reactive.security.auth.jwt.JWTCustomVerifier;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -34,7 +35,7 @@ import java.util.function.Predicate;
  * returns an Authentication object if the JWT token is valid.
  * Validity means is well formed and signature is correct
  */
-public class ServerHttpBearerAuthenticationConverter implements Function<ServerWebExchange, Mono<Authentication>> {
+public class ServerHttpBearerAuthenticationConverter implements ServerAuthenticationConverter {
 
     private static final String BEARER = "Bearer ";
     private static final Predicate<String> matchBearerLength = authValue -> authValue.length() > BEARER.length();
@@ -45,14 +46,14 @@ public class ServerHttpBearerAuthenticationConverter implements Function<ServerW
      * Apply this function to the current WebExchange, an Authentication object
      * is returned when completed.
      *
-     * @param serverWebExchange
+     * @param exchange
      * @return
      */
     @Override
-    public Mono<Authentication> apply(ServerWebExchange serverWebExchange) {
-        return Mono.justOrEmpty(serverWebExchange)
+    public Mono<Authentication> convert(ServerWebExchange exchange) {
+        return Mono.justOrEmpty(exchange)
                 .flatMap(AuthorizationHeaderPayload::extract)
-                   .filter(matchBearerLength)
+                .filter(matchBearerLength)
                 .flatMap(isolateBearerValue)
                 .flatMap(jwtVerifier::check)
                 .flatMap(UsernamePasswordAuthenticationBearer::create).log();

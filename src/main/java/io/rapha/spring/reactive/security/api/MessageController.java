@@ -19,13 +19,22 @@
  */
 package io.rapha.spring.reactive.security.api;
 
+import com.sun.xml.internal.ws.util.StringUtils;
+import io.rapha.spring.reactive.security.auth.jwt.JWTTokenService;
 import io.rapha.spring.reactive.security.domain.FormattedMessage;
 import io.rapha.spring.reactive.security.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * A controller serving rest endpoints to show authorization features in this project
@@ -39,6 +48,9 @@ public class MessageController {
 
     @Autowired
     MessageService messageService;
+
+    @Autowired
+    private ReactiveAuthenticationManager authenticationManager;
 
     /**
      * Root endpoint serves as a resource for Basic Authentication
@@ -94,5 +106,14 @@ public class MessageController {
     @PreAuthorize("hasRole('GUEST')")
     public Flux<FormattedMessage> privateMessageGuest() {
         return messageService.getCustomMessage("Guest");
+    }
+
+    @GetMapping("/api/authenticate")
+    public Flux<String> authenticate(@RequestParam String username, @RequestParam String password) {
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
+        return authenticationManager.authenticate(authenticationToken)
+                .flatMap(authentication -> Mono.justOrEmpty(JWTTokenService.generateToken(authentication.getPrincipal().toString(), null, authentication.getAuthorities())))
+                .flatMap(jwt -> Mono.justOrEmpty(String.join(" ", "Bearer", jwt)))
+                .flux();
     }
 }
