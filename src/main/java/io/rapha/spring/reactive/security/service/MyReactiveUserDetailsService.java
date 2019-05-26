@@ -17,7 +17,7 @@ public class MyReactiveUserDetailsService implements ReactiveUserDetailsService 
         return Mono.justOrEmpty(User.withDefaultPasswordEncoder()
                                     .username("user")
                                     .password("user")
-                                    .roles("USER", "ADMIN")
+                                    .roles("USER")
                                     .build());
     }
 }

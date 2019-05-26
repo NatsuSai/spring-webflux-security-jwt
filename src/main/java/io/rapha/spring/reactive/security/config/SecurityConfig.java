@@ -1,12 +1,15 @@
 package io.rapha.spring.reactive.security.config;
 
 import io.rapha.spring.reactive.security.auth.MyReactiveAuthenticationManager;
+import io.rapha.spring.reactive.security.auth.MyReactiveAuthorizationManager;
 import io.rapha.spring.reactive.security.auth.basic.BasicAuthenticationSuccessHandler;
 import io.rapha.spring.reactive.security.auth.bearer.BearerTokenReactiveAuthenticationManager;
 import io.rapha.spring.reactive.security.auth.bearer.ServerHttpBearerAuthenticationConverter;
 import io.rapha.spring.reactive.security.service.MyReactiveUserDetailsService;
+import io.rapha.spring.reactive.security.service.ResourceService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -17,6 +20,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
+import org.springframework.security.web.server.authorization.AuthorizationContext;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 
 /**
@@ -38,7 +42,7 @@ public class SecurityConfig {
      * provide security
      **/
     @Bean
-    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http, ReactiveUserDetailsService userDetailsService) {
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http, ReactiveUserDetailsService userDetailsService, ResourceService resourceService) {
 
         http
                 .authorizeExchange()
@@ -47,8 +51,8 @@ public class SecurityConfig {
                 .and()
                 .addFilterAt(basicAuthenticationFilter(userDetailsService), SecurityWebFiltersOrder.HTTP_BASIC)
                 .authorizeExchange()
-                .pathMatchers("/api/**")
-                .authenticated()
+                    .pathMatchers("/api/**")
+                    .access(myReactiveAuthorizationManager(resourceService))
                 .and()
                 .addFilterAt(bearerAuthenticationFilter(), SecurityWebFiltersOrder.AUTHENTICATION);
 
@@ -127,4 +131,9 @@ public class SecurityConfig {
 //                .build();
 //        return new MapReactiveUserDetailsService(user);
 //    }
+
+    @Bean
+    public MyReactiveAuthorizationManager myReactiveAuthorizationManager(ResourceService resourceService) {
+        return new MyReactiveAuthorizationManager(resourceService);
+    }
 }
