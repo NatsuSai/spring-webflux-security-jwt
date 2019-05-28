@@ -1,4 +1,4 @@
-package io.rapha.spring.reactive.security.service;
+package io.natsusai.spring.reactive.security.service;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -14,6 +14,6 @@ import java.util.List;
 @Service
 public class ResourceService {
     public List<String> getPermission(String path, HttpMethod method) {
-        return Arrays.asList("ROLE_USER1","ROLE_ADMIN");
+        return Arrays.asList("ROLE_USER","ROLE_ADMIN");
     }
 }
