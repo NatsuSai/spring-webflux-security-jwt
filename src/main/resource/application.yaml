@@ -1,0 +1,4 @@
+jwt:
+  base64-secret: /lFvzLjpTabbPwmZXJ537zhlJq58/9U0f6nKZsKe/Ds1AaOY8yqtUVoKsrMadTyJyHMIADAw1e3N96IVrXrViQ==
+  token-validity-in-seconds: 86400
+  token-validity-in-seconds-for-remember-me: 2592000
